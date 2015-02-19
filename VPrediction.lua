@@ -387,7 +387,7 @@ end
 -- Calculate the hero position based on the last waypoints
 function VPrediction:CalculateTargetPosition(unit, delay, radius, speed, from, spelltype)
 	local Waypoints = {}
-	local Position, CastPosition = Vector(unit), Vector(unit)
+	local Position, CastPosition, Shoot = Vector(unit), Vector(unit), false
 	local t
 
 	Waypoints = self:GetCurrentWayPoints(unit)
@@ -395,14 +395,15 @@ function VPrediction:CalculateTargetPosition(unit, delay, radius, speed, from, s
 	
 	if #Waypoints == 1 then
 		Position, CastPosition = Vector(Waypoints[1]), Vector(Waypoints[1])
-		return Position, CastPosition
-	elseif (Waypointslength - delay * unit.ms + radius) >= 0 then
+		return Position, CastPosition, true
+	elseif Waypointslength >= delay * unit.ms + radius then
 		local tA = 0
 		Waypoints = self:CutWaypoints(Waypoints, delay * unit.ms - radius)
 		
+		local A, B = 0, 0
 		if speed ~= math.huge then
 			for i = 1, #Waypoints - 1 do
-				local A, B = Waypoints[i], Waypoints[i+1]
+				A, B = Waypoints[i], Waypoints[i+1]
 				if i == #Waypoints - 1 then
 					B = Vector(B) + radius * Vector(B - A):normalized()
 				end
@@ -411,7 +412,7 @@ function VPrediction:CalculateTargetPosition(unit, delay, radius, speed, from, s
 				t1, t2 = (t1 and tA <= t1 and t1 <= (tB - tA)) and t1 or nil, (t2 and tA <= t2 and t2 <= (tB - tA)) and t2 or nil
 				t = t1 and t2 and math.min(t1, t2) or t1 or t2
 				if t then
-					CastPosition = t==Vector(p1) and t1 or Vector(p2)
+					CastPosition = t==t1 and Vector(p1.x, myHero.y, p1.y) or Vector(p2.x, myHero.y, p2.y)
 					break
 				end
 				tA = tB
@@ -419,14 +420,27 @@ function VPrediction:CalculateTargetPosition(unit, delay, radius, speed, from, s
 		else
 			t = 0
 			CastPosition = Vector(Waypoints[1])
+			Shoot = true
 		end
 
 		if t then
+			Shoot = true
 			if (self:GetWaypointsLength(Waypoints) - t * unit.ms - radius) >= 0 then
 				Waypoints = self:CutWaypoints(Waypoints, radius + t * unit.ms)
 				Position = Vector(Waypoints[1])
 			else
 				Position = CastPosition
+			end
+			
+			if spelltype == 'line' and (Position.x ~= CastPosition.x or Position.z ~= CastPosition.z) then
+				local angle = Vector(0, 0):angleBetween(Vector(from.x, from.z) - Vector(Position.x, Position.z), Vector(A.x, A.z) - Vector(B.x, B.z))
+				if angle >= 40 and angle <= 135 then
+					local angle2 = math.asin(radius / GetDistance(Position, from))
+					local direction2 = (Vector(Position) - Vector(from))
+					local candi1 = from + direction2:rotated(0, angle2 ,0)
+					local candi2 = from + direction2:rotated(0, -angle2 ,0)
+					CastPosition = GetDistanceSqr(candi1, CastPosition) < GetDistanceSqr(candi2, CastPosition) and candi1 or candi2;
+				end
 			end
 		elseif unit.type ~= myHero.type then
 			CastPosition = Vector(Waypoints[#Waypoints])
@@ -441,7 +455,7 @@ function VPrediction:CalculateTargetPosition(unit, delay, radius, speed, from, s
 		CastPosition = Position
 	end
 
-	return CastPosition, Position
+	return CastPosition, Position, Shoot
 end
 
 function VPrediction:MaxAngle(unit, currentwaypoint, from)
@@ -468,7 +482,7 @@ function VPrediction:WayPointAnalysis(unit, delay, radius, range, speed, from, s
 		HitChance = 1
 	end
 	
-	Position, CastPosition = self:CalculateTargetPosition(unit, delay, radius, speed, from, spelltype, dmg)
+	CastPosition, Position, Shoot = self:CalculateTargetPosition(unit, delay, radius, speed, from, spelltype, dmg)
 	
 	if self:CountWaypoints(unit.networkID, self:GetTime() - 0.1) >= 1 or self:CountWaypoints(unit.networkID, self:GetTime() - 1) == 1 then
 		HitChance = 2
@@ -506,10 +520,6 @@ function VPrediction:WayPointAnalysis(unit, delay, radius, range, speed, from, s
 		HitChance = 3
 	end
 
-	if Vector(from):angleBetween(Vector(unit), Vector(CastPosition)) > 60 then
-		HitChance = 1
-	end
-	
 	if not Position or not CastPosition then
 		HitChance = 0
 		CastPosition = Vector(unit)
@@ -517,13 +527,13 @@ function VPrediction:WayPointAnalysis(unit, delay, radius, range, speed, from, s
 	end
 
 	if GetDistance(myHero, unit) < 250 and unit ~= myHero then
-		HitChance = 2
+		HitChance = HitChance ~= 0 and 2 or 0
 		Position, CastPosition = self:CalculateTargetPosition(unit, delay*0.5, radius, speed*2, from, spelltype,  dmg)
 		Position = CastPosition
 	end
 
 	if #SavedWayPoints == 0 then
-		HitChance = 2
+		HitChance = HitChance ~= 0 and 2 or 0
 	end
 
 	if self.DontShootUntilNewWaypoints[unit.networkID] then
@@ -532,6 +542,10 @@ function VPrediction:WayPointAnalysis(unit, delay, radius, range, speed, from, s
 		Position = CastPosition
 	end
 
+	if not Shoot then
+		HitChance = 0
+	end
+	
 	return CastPosition, HitChance, Position
 end
 
@@ -575,7 +589,7 @@ function VPrediction:GetBestCastPosition(unit, delay, radius, range, speed, from
 		elseif TargetImmobile then
 			Position, CastPosition = ImmobilePos, ImmobileCastPosition
 			HitChance = 4
-		elseif not self.DontUseWayPoints then
+		else
 			CastPosition, HitChance, Position = self:WayPointAnalysis(unit, delay, radius, range, speed, from, spelltype)
 		end
 	end
