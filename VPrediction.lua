@@ -1,28 +1,32 @@
-local version = '3.002'
-local AUTO_UPDATE = true
+local version = '3.003'
 local UPDATE_HOST = 'raw.github.com'
 local UPDATE_PATH = '/Sunts/BoL/master/VPrediction.lua?rand='..math.random(1,10000)
 local UPDATE_FILE_PATH = LIB_PATH..'vPrediction.lua'
 local UPDATE_URL = 'https://'..UPDATE_HOST..UPDATE_PATH
-
 local function AutoupdaterMsg(msg) print('<font color=\'#6699ff\'><b>VPrediction:</b></font> <font color=\'#FFFFFF\'>'..msg..'.</font>') end
-if AUTO_UPDATE then
-	local ServerData = GetWebResult(UPDATE_HOST, '/Sunts/BoL/master/VPrediction.version')
-	if ServerData then
-		ServerVersion = type(tonumber(ServerData)) == 'number' and tonumber(ServerData) or nil
+
+AutoupdaterMsg('VPrediction ('..version..') loaded!')
+
+-- Delay the auto updating to allow fast double F9
+DelayAction(function()
+	local VersionData = GetWebResult('chdev.info', '/vpred.version')
+	if string.match(VersionData, 'ServerVersion') then
+		-- load the ServerVersion and ChangeLog
+		load(VersionData)()
 		if ServerVersion then
+			-- if local version is lower then update
 			if tonumber(version) < ServerVersion then
-				AutoupdaterMsg('New version available'..ServerVersion)
+				AutoupdaterMsg('New version available: ' .. ServerVersion)
 				AutoupdaterMsg('Updating, please don\'t press F9')
 				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg('Successfully updated. ('..version..' => '..ServerVersion..'), press F9 twice to load the updated version.') end) end, 3)
-			else
-				AutoupdaterMsg('You have got the latest version ('..ServerVersion..')')
 			end
 		end
-	else
-		AutoupdaterMsg('Error downloading version info')
+		
+		if ChangeLog then
+			AutoupdaterMsg('Changelog: ' .. ChangeLog)
+		end
 	end
-end
+end, 10)
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
