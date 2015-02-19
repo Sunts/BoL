@@ -454,11 +454,7 @@ function VPrediction:WayPointAnalysis(unit, delay, radius, range, speed, from, s
 	local SavedWayPoints = self.TargetsWaypoints[unit.networkID] and self.TargetsWaypoints[unit.networkID] or {}
 	local CurrentWayPoints = self:GetCurrentWayPoints(unit)
 	
-	if delay < 0.25 then
-		HitChance = 2
-	else
-		HitChance = 1
-	end
+	HitChance = 1
 	
 	CastPosition, Position, Shoot = self:CalculateTargetPosition(unit, delay, radius, speed, from, spelltype, dmg)
 	
@@ -480,8 +476,6 @@ function VPrediction:WayPointAnalysis(unit, delay, radius, range, speed, from, s
 	if self:CountWaypoints(unit.networkID, self:GetTime() - N) == 0 then
 		HitChance = 2
 	end
-	
-	HitChance = 1 -- For now better start from 1 :p
 	
 	if #CurrentWayPoints <= 1 then
 		HitChance = 2
