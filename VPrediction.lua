@@ -1,4 +1,4 @@
-local version = '3.004'
+local version = '3.005'
 local UPDATE_HOST = 'raw.github.com'
 local UPDATE_PATH = '/Sunts/BoL/master/VPrediction.lua?rand='..math.random(1,10000)
 local UPDATE_FILE_PATH = LIB_PATH..'vPrediction.lua'
@@ -19,9 +19,7 @@ function VPrediction:__init()
 	self.MinionsAttacks = {}
 	
 	if not _G.VPredictionMenu then
-		_G.VPredictionMenu = scriptConfig('VPrediction', 'VPrediction')
-			_G.VPredictionMenu:addParam('Mode', 'Cast Mode', SCRIPT_PARAM_LIST, 1, {'Fast', 'Medium', 'Slow' })
-			
+		_G.VPredictionMenu = scriptConfig('VPrediction', 'VPrediction3')
 			-- Collision menu
 			_G.VPredictionMenu:addSubMenu('Collision', 'Collision')
 				_G.VPredictionMenu.Collision:addParam('Buffer', 'Collision buffer', SCRIPT_PARAM_SLICE, 20, 0, 100)
@@ -468,8 +466,8 @@ function VPrediction:WayPointAnalysis(unit, delay, radius, range, speed, from, s
 		HitChance = 2
 	end
 	
-	local N = (_G.VPredictionMenu.Mode == _SLOW) and 3 or 2
-	local t1 = (_G.VPredictionMenu.Mode == _SLOW) and 1 or 0.5
+	local N = 3
+	local t1 = 1
 	if self:CountWaypoints(unit.networkID, self:GetTime() - 0.75) >= N then
 		local angle = self:MaxAngle(unit, CurrentWayPoints[#CurrentWayPoints], self:GetTime() - t1)
 		if angle > 90 then
@@ -483,7 +481,7 @@ function VPrediction:WayPointAnalysis(unit, delay, radius, range, speed, from, s
 		HitChance = 2
 	end
 	
-	HitChance = 2
+	HitChance = 1 -- For now better start from 1 :p
 	
 	if #CurrentWayPoints <= 1 then
 		HitChance = 2
@@ -503,7 +501,7 @@ function VPrediction:WayPointAnalysis(unit, delay, radius, range, speed, from, s
 		Position = CastPosition
 	end
 
-	if GetDistance(myHero, unit) < 250 and unit ~= myHero then
+	if GetDistanceSqr(myHero, unit) < 250 * 250 and unit ~= myHero then
 		HitChance = HitChance ~= 0 and 2 or 0
 		Position, CastPosition = self:CalculateTargetPosition(unit, delay*0.5, radius, speed*2, from, spelltype,  dmg)
 		Position = CastPosition
@@ -1264,4 +1262,4 @@ DelayAction(function()
 			AutoupdaterMsg('Changelog: ' .. ChangeLog)
 		end
 	end
-end, 10)
+end, 1)
