@@ -1,4 +1,4 @@
-local version = '3.006'
+local version = '3.007'
 local UPDATE_HOST = 'raw.github.com'
 local UPDATE_PATH = '/Sunts/BoL/master/VPrediction.lua?rand='..math.random(1,10000)
 local UPDATE_FILE_PATH = LIB_PATH..'vPrediction.lua'
@@ -410,7 +410,7 @@ function VPrediction:CalculateTargetPosition(unit, delay, radius, speed, from, s
 				Position = CastPosition
 			end
 			
-			if spelltype == 'line' and unit.type == myHero.type and (Position.x ~= CastPosition.x or Position.z ~= CastPosition.z) then
+			if spelltype == 'line' and unit.type == myHero.type and (Position.x ~= CastPosition.x or Position.z ~= CastPosition.z) and A ~= 0 then
 				local angle = Vector(0, 0):angleBetween(Vector(from.x, from.z) - Vector(Position.x, Position.z), Vector(A.x, A.z) - Vector(B.x, B.z))
 				if angle >= 40 and angle <= 135 then
 					local angle2 = math.asin(radius / GetDistance(Position, from))
