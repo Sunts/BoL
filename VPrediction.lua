@@ -1246,7 +1246,7 @@ AutoupdaterMsg('VPrediction ('..version..') loaded!')
 -- Delay the auto updating to allow fast double F9
 DelayAction(function()
 	local VersionData = GetWebResult('chdev.info', '/vpred.version')
-	if string.match(VersionData, 'ServerVersion') then
+	if VersionData ~= nil and string.match(VersionData, 'ServerVersion') then
 		-- load the ServerVersion and ChangeLog
 		load(VersionData)()
 		if ServerVersion then
