@@ -5,29 +5,6 @@ local UPDATE_FILE_PATH = LIB_PATH..'vPrediction.lua'
 local UPDATE_URL = 'https://'..UPDATE_HOST..UPDATE_PATH
 local function AutoupdaterMsg(msg) print('<font color=\'#6699ff\'><b>VPrediction:</b></font> <font color=\'#FFFFFF\'>'..msg..'.</font>') end
 
-AutoupdaterMsg('VPrediction ('..version..') loaded!')
-
--- Delay the auto updating to allow fast double F9
-DelayAction(function()
-	local VersionData = GetWebResult('chdev.info', '/vpred.version')
-	if string.match(VersionData, 'ServerVersion') then
-		-- load the ServerVersion and ChangeLog
-		load(VersionData)()
-		if ServerVersion then
-			-- if local version is lower then update
-			if tonumber(version) < ServerVersion then
-				AutoupdaterMsg('New version available: ' .. ServerVersion)
-				AutoupdaterMsg('Updating, please don\'t press F9')
-				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg('Successfully updated. ('..version..' => '..ServerVersion..'), press F9 twice to load the updated version.') end) end, 3)
-			end
-		end
-		
-		if ChangeLog then
-			AutoupdaterMsg('Changelog: ' .. ChangeLog)
-		end
-	end
-end, 10)
-
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -435,7 +412,7 @@ function VPrediction:CalculateTargetPosition(unit, delay, radius, speed, from, s
 				Position = CastPosition
 			end
 			
-			if spelltype == 'line' and (Position.x ~= CastPosition.x or Position.z ~= CastPosition.z) then
+			if spelltype == 'line' and unit.type == myHero.type and (Position.x ~= CastPosition.x or Position.z ~= CastPosition.z) then
 				local angle = Vector(0, 0):angleBetween(Vector(from.x, from.z) - Vector(Position.x, Position.z), Vector(A.x, A.z) - Vector(B.x, B.z))
 				if angle >= 40 and angle <= 135 then
 					local angle2 = math.asin(radius / GetDistance(Position, from))
@@ -1127,7 +1104,7 @@ function VPrediction:OnTick()
 	end
 end
 
---[[Drawing functions for debug: ]]
+-- Drawing functions for debug: 
 function VPrediction:DrawSavedWaypoints(object, time, color, drawPoints)
 	colour = color and color or ARGB(255, 0, 255, 0)
 	for i = object.pathIndex, object.pathCount do	
@@ -1265,3 +1242,26 @@ function VPrediction:CalcDamageOfAttack(source, target, spell, additionalDamage)
 	-- calculate damage dealt
 	return damageMultiplier * totalDamage
 end
+
+AutoupdaterMsg('VPrediction ('..version..') loaded!')
+
+-- Delay the auto updating to allow fast double F9
+DelayAction(function()
+	local VersionData = GetWebResult('chdev.info', '/vpred.version')
+	if string.match(VersionData, 'ServerVersion') then
+		-- load the ServerVersion and ChangeLog
+		load(VersionData)()
+		if ServerVersion then
+			-- if local version is lower then update
+			if tonumber(version) < ServerVersion then
+				AutoupdaterMsg('New version available: ' .. ServerVersion)
+				AutoupdaterMsg('Updating, please don\'t press F9')
+				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg('Successfully updated. ('..version..' => '..ServerVersion..'), press F9 twice to load the updated version.') end) end, 3)
+			end
+		end
+		
+		if ChangeLog then
+			AutoupdaterMsg('Changelog: ' .. ChangeLog)
+		end
+	end
+end, 10)
