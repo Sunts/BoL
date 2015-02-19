@@ -1,4 +1,4 @@
-local version = '3.000'
+local version = '3.001'
 local AUTO_UPDATE = true
 local UPDATE_HOST = 'raw.github.com'
 local UPDATE_PATH = '/Sunts/BoL/master/VPrediction.lua?rand='..math.random(1,10000)
