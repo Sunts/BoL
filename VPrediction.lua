@@ -1,4 +1,4 @@
-local version = '3.005'
+local version = '3.006'
 local UPDATE_HOST = 'raw.github.com'
 local UPDATE_PATH = '/Sunts/BoL/master/VPrediction.lua?rand='..math.random(1,10000)
 local UPDATE_FILE_PATH = LIB_PATH..'vPrediction.lua'
@@ -454,7 +454,7 @@ function VPrediction:WayPointAnalysis(unit, delay, radius, range, speed, from, s
 	local SavedWayPoints = self.TargetsWaypoints[unit.networkID] and self.TargetsWaypoints[unit.networkID] or {}
 	local CurrentWayPoints = self:GetCurrentWayPoints(unit)
 	
-	HitChance = 1
+	HitChance = 2
 	
 	CastPosition, Position, Shoot = self:CalculateTargetPosition(unit, delay, radius, speed, from, spelltype, dmg)
 	
