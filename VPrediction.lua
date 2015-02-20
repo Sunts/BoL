@@ -1,4 +1,5 @@
-local version = '3.010'
+local AUTO_UPDATE = true
+local version = '3.011'
 local UPDATE_HOST = 'raw.github.com'
 local UPDATE_PATH = '/Sunts/BoL/master/VPrediction.lua?rand='..math.random(1,10000)
 local UPDATE_FILE_PATH = LIB_PATH..'vPrediction.lua'
@@ -1247,7 +1248,7 @@ DelayAction(function()
 		load(VersionData)()
 		if ServerVersion then
 			-- if local version is lower then update
-			if tonumber(version) < ServerVersion then
+			if tonumber(version) < ServerVersion and AUTO_UPDATE then
 				AutoupdaterMsg('New version available: ' .. ServerVersion)
 				AutoupdaterMsg('Updating, please don\'t press F9')
 				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg('Successfully updated. ('..version..' => '..ServerVersion..'), press F9 twice to load the updated version.') end) end, 3)
