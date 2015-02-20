@@ -1,4 +1,4 @@
-local version = '3.009'
+local version = '3.010'
 local UPDATE_HOST = 'raw.github.com'
 local UPDATE_PATH = '/Sunts/BoL/master/VPrediction.lua?rand='..math.random(1,10000)
 local UPDATE_FILE_PATH = LIB_PATH..'vPrediction.lua'
@@ -523,7 +523,7 @@ end
 function VPrediction:GetBestCastPosition(unit, delay, radius, range, speed, from, collision, spelltype, dmg)
 	range = range and range - 15 or math.huge
 	radius = radius == 0 and 1 or (radius + self:GetHitBox(unit)) - 4
-	speed = speed and speed or math.huge
+	speed = (speed and speed ~= 0) and speed or math.huge
 	from = from and from or Vector(myHero)
 	if from.networkID and from.networkID == myHero.networkID then
 		from = Vector(myHero)
