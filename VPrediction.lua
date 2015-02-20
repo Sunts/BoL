@@ -1,4 +1,4 @@
-local version = '3.008'
+local version = '3.009'
 local UPDATE_HOST = 'raw.github.com'
 local UPDATE_PATH = '/Sunts/BoL/master/VPrediction.lua?rand='..math.random(1,10000)
 local UPDATE_FILE_PATH = LIB_PATH..'vPrediction.lua'
@@ -412,7 +412,7 @@ function VPrediction:CalculateTargetPosition(unit, delay, radius, speed, from, s
 			if spelltype == 'line' and unit.type == myHero.type and (Position.x ~= CastPosition.x or Position.z ~= CastPosition.z) and A ~= 0 then
 				local angle = Vector(0, 0):angleBetween(Vector(from.x, from.z) - Vector(Position.x, Position.z), Vector(A.x, A.z) - Vector(B.x, B.z))
 				if angle >= 40 and angle <= 135 then
-					local angle2 = math.asin(radius / GetDistance(Position, from))
+					local angle2 = math.asin((radius - 20) / GetDistance(Position, from))
 					local direction2 = (Vector(Position) - Vector(from))
 					local candi1 = from + direction2:rotated(0, angle2 ,0)
 					local candi2 = from + direction2:rotated(0, -angle2 ,0)
@@ -456,10 +456,11 @@ function VPrediction:WayPointAnalysis(unit, delay, radius, range, speed, from, s
 	HitChance = 2
 	
 	CastPosition, Position, Shoot = self:CalculateTargetPosition(unit, delay, radius, speed, from, spelltype, dmg)
-	
+	--[[
 	if self:CountWaypoints(unit.networkID, self:GetTime() - 0.1) >= 1 or self:CountWaypoints(unit.networkID, self:GetTime() - 1) == 1 then
 		HitChance = 2
 	end
+	]]--
 	
 	local N = 3
 	local t1 = 1
@@ -472,6 +473,7 @@ function VPrediction:WayPointAnalysis(unit, delay, radius, range, speed, from, s
 		end
 	end
 	
+	--[[
 	if self:CountWaypoints(unit.networkID, self:GetTime() - N) == 0 then
 		HitChance = 2
 	end
@@ -483,7 +485,8 @@ function VPrediction:WayPointAnalysis(unit, delay, radius, range, speed, from, s
 	if self:isSlowed(unit, delay, speed, from) then
 		HitChance = 2
 	end
-
+	]]--
+	
 	if Position and CastPosition and ((radius / unit.ms >= delay + GetDistance(from, CastPosition)/speed) or (radius / unit.ms >= delay + GetDistance(from, Position)/speed)) then
 		HitChance = 3
 	end
@@ -496,7 +499,7 @@ function VPrediction:WayPointAnalysis(unit, delay, radius, range, speed, from, s
 
 	if GetDistanceSqr(myHero, unit) < 250 * 250 and unit ~= myHero then
 		HitChance = HitChance ~= 0 and 2 or 0
-		Position, CastPosition = self:CalculateTargetPosition(unit, delay*0.5, radius, speed*2, from, spelltype,  dmg)
+		Position, CastPosition = self:CalculateTargetPosition(unit, delay*0.5, radius, speed, from, spelltype,  dmg)
 		Position = CastPosition
 	end
 
@@ -511,7 +514,7 @@ function VPrediction:WayPointAnalysis(unit, delay, radius, range, speed, from, s
 	end
 
 	if not Shoot then
-		HitChance = 0
+		HitChance = 1
 	end
 	
 	return CastPosition, HitChance, Position
