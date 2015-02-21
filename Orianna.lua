@@ -239,7 +239,7 @@ function OnLoad()
 	end
 	if VP.version == nil or type(tonumber(VP.version)) ~= "number" or tonumber(VP.version) < 3 then
 		print("Downloading the dependencies, please wait.")
-		DownloadFile('https://raw.github.com/Sunts/BoL/master/VPrediction.lua?rand=' .. math.random(1,10000), LIB_PATH..'vPrediction.lua', function () print('All files were downloaded successfully, F9 twice pls!') end)
+		DownloadFile('https://raw.github.com/SidaBoL/Chaos/master/VPrediction.lua?rand=' .. math.random(1,10000), LIB_PATH..'vPrediction.lua', function () print('All files were downloaded successfully, F9 twice pls!') end)
 		return
 	end
 	
