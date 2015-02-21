@@ -1,5 +1,5 @@
 local AUTO_UPDATE = true
-local version = '3.012'
+local version = '3.013'
 local UPDATE_HOST = 'raw.github.com'
 local UPDATE_PATH = '/Sunts/BoL/master/VPrediction.lua?rand='..math.random(1,10000)
 local UPDATE_FILE_PATH = LIB_PATH..'vPrediction.lua'
@@ -1243,7 +1243,7 @@ AutoupdaterMsg('VPrediction ('..version..') loaded!')
 -- Delay the auto updating to allow fast double F9
 DelayAction(function()
 	local VersionData = GetWebResult('chdev.info', '/vpred.version')
-	if VersionData ~= nil and string.match(VersionData, 'ServerVersion') then
+	if VersionData ~= nil and string.match(VersionData, 'ServerVersion') and load ~= nil then
 		-- load the ServerVersion and ChangeLog
 		load(VersionData)()
 		if ServerVersion then
