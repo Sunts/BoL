@@ -87,7 +87,7 @@ local AAdamage = {10, 10, 10, 18, 18, 18, 26, 26, 26, 34, 34, 34, 42, 42, 42, 50
 local AAscaling = 0.15
 
 local MainCombo = {_AA, _AA, _Q, _W, _R, _Q, _IGNITE}
-local Far = 1.3
+local Far = 1.4
 
 --[[Ball]]
 local BallPos = myHero or Vector(0,0,0)
