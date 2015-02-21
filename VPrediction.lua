@@ -1,5 +1,5 @@
 local AUTO_UPDATE = true
-local version = '3.013'
+local version = '3.014'
 local UPDATE_HOST = 'raw.github.com'
 local UPDATE_PATH = '/SidaBoL/Chaos/master/VPrediction.lua?rand='..math.random(1,10000)
 local UPDATE_FILE_PATH = LIB_PATH..'vPrediction.lua'
