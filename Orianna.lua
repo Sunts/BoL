@@ -1,7 +1,7 @@
 if myHero.charName ~= "Orianna" then return end
 require "vPrediction"
 
-local version = 2.0
+local version = 2.1
 local AUTO_UPDATE = true
 local UPDATE_HOST = 'raw.github.com'
 local UPDATE_PATH = '/Sunts/BoL/master/Orianna.lua?rand='..math.random(1,10000)
@@ -277,7 +277,7 @@ function CheckEnemiesHitByW()
 	local enemieshit = {}
 	for i, enemy in ipairs(GetEnemyHeroes()) do
 		local position = VP:GetPredictedPos(enemy, Wdelay)
-		if ValidTarget(enemy) and GetDistance(position, BallPos) <= Wradius and GetDistance(enemy.visionPos, BallPos) <= Wradius then
+		if ValidTarget(enemy) and GetDistanceSqr(position, BallPos) <= Wradius*Wradius and GetDistanceSqr(enemy, BallPos) <= Wradius*Wradius then
 			table.insert(enemieshit, enemy)
 		end
 	end
@@ -293,7 +293,7 @@ function CheckEnemiesHitByE(To)
 		local cp, hc, position = VP:GetLineCastPosition(enemy, Edelay, Eradius, math.huge, BallSpeedE, StartPoint)
 		if position then
 			local PointInLine, tmp, isOnSegment = VectorPointProjectionOnLineSegment(StartPoint, EndPoint, position)
-			if ValidTarget(enemy) and isOnSegment and GetDistance(PointInLine, position) <= (Eradius + VP:GetHitBox(enemy)) and GetDistance(PointInLine, enemy.visionPos) < (Eradius) * 2 + 30 then
+			if ValidTarget(enemy) and isOnSegment and GetDistanceSqr(PointInLine, position) <= math.pow(Eradius + VP:GetHitBox(enemy), 2) and GetDistanceSqr(PointInLine, enemy) < math.pow((Eradius) * 2 + 30, 2) then
 				table.insert(enemieshit, enemy)
 			end
 		end
@@ -306,7 +306,7 @@ function CheckEnemiesHitByR()
 	local enemieshit = {}
 	for i, enemy in ipairs(GetEnemyHeroes()) do
 		local position = VP:GetPredictedPos(enemy, Rdelay)
-		if ValidTarget(enemy) and GetDistance(position, BallPos) <= Rradius and GetDistance(enemy.visionPos, BallPos) <= 1.25 * Rradius  then
+		if ValidTarget(enemy) and GetDistanceSqr(position, BallPos) <= Rradius*Rradius and GetDistanceSqr(enemy, BallPos) <= math.pow(1.25 * Rradius, 2)  then
 			table.insert(enemieshit, enemy)
 		end
 	end
@@ -320,7 +320,7 @@ function CastQ(target, fast)
 
 	if (HitChance < 2) then return end
 
-	if GetDistance(myHero.visionPos, Position) > Qrange + Wradius + VP:GetHitBox(target) then
+	if GetDistanceSqr(myHero, Position) > math.pow(Qrange + Wradius + VP:GetHitBox(target), 2) then
 		target2 = GetBestTarget(Qrange, target)
 		if target2 then
 			CastPosition,  HitChance,  Position = VP:GetLineCastPosition(target2, Qdelay, Qradius, math.huge, Speed, BallPos)
@@ -330,7 +330,7 @@ function CastQ(target, fast)
 		end
 	end
 
-	if GetDistance(myHero.visionPos, Position) > (Qrange + Wradius + VP:GetHitBox(target))  then
+	if GetDistanceSqr(myHero, Position) > math.pow(Qrange + Wradius + VP:GetHitBox(target), 2) then
 		do return end
 	end
 
@@ -350,15 +350,15 @@ function CastQ(target, fast)
 		end
 
 
-		if MinTravelTime < (Menu.Misc.EQ / 100) * TravelTime and (not Etarget.isMe or GetDistance(BallPos, myHero) > 100) and GetDistance(Etarget) < GetDistance(CastPoint) then
+		if MinTravelTime < (Menu.Misc.EQ / 100) * TravelTime and (not Etarget.isMe or GetDistanceSqr(BallPos, myHero) > 10000) and GetDistanceSqr(Etarget) < GetDistanceSqr(CastPoint) then
 			CastE(Etarget)
 			do return end
 		end
 	end
-	if GetDistanceSqr(myHero.visionPos, CastPoint) < Qrange * Qrange then
+	if GetDistanceSqr(myHero, CastPoint) < Qrange * Qrange then
 		CastSpell(_Q, CastPoint.x, CastPoint.z)
 	else
-		CastPoint = Vector(myHero.visionPos) + Qrange * (Vector(CastPoint) - Vector(myHero)):normalized()
+		CastPoint = Vector(myHero) + Qrange * (Vector(CastPoint) - Vector(myHero)):normalized()
 		CastSpell(_Q, CastPoint.x, CastPoint.z)
 	end
 end
@@ -385,7 +385,7 @@ end
 
 function CastR(target)
 	local position = VP:GetPredictedPos(target, Rdelay)
-	if GetDistance(position, BallPos) < Rradius and GetDistance(target, BallPos) < Rradius then
+	if GetDistanceSqr(position, BallPos) < Rradius*Rradius and GetDistanceSqr(target, BallPos) < Rradius*Rradius then
 		CastSpellEx(_R)
 	end
 end
@@ -393,7 +393,7 @@ end
 function GetNMinionsHit(Pos, radius)
 	local count = 0
 	for i, minion in pairs(EnemyMinions.objects) do
-		if GetDistance(minion, Pos) < radius then
+		if GetDistanceSqr(minion, Pos) < radius*radius then
 			count = count + 1
 		end
 	end
@@ -407,7 +407,7 @@ function GetNMinionsHitE(Pos)
 	for i, minion in pairs(EnemyMinions.objects) do
 		local position = Vector(minion.x, 0, minion.z)
 		local PointInLine = VectorPointProjectionOnLineSegment(StartPoint, EndPoint, position)
-		if GetDistance(PointInLine, position) < Eradius then
+		if GetDistanceSqr(PointInLine, position) < Eradius*Eradius then
 			count = count + 1
 		end
 	end
@@ -439,7 +439,7 @@ function Farm(Mode)
 			local MaxHit = 0
 			local MaxPos = 0
 			for i, minion in pairs(EnemyMinions.objects) do
-				if GetDistance(minion) <= Qrange then
+				if GetDistanceSqr(minion) <= Qrange*Qrange then
 					local MinionPos = VP:GetPredictedPos(minion, Qdelay, BallSpeed, BallPos)
 					local Hit = GetNMinionsHit(minion, Wradius)
 					if Hit >= MaxHit then
@@ -491,11 +491,11 @@ function FarmJungle()
 			CastSpell(_Q, Position.x, Position.z)
 		end
 		
-		if UseW and WREADY and GetDistance(BallPos, Minion) < Wradius then
+		if UseW and WREADY and GetDistanceSqr(BallPos, Minion) < Wradius*Wradius then
 			CastSpellEx(_W)
 		end
 		
-		if UseE and (not WREADY or not UseW) and EREADY and GetDistance(Minion) < 700 then
+		if UseE and (not WREADY or not UseW) and EREADY and GetDistanceSqr(Minion) < 700*700 then
 			local starget = myHero
 			local dist = GetDistanceSqr(Minion)
 			for i, ally in ipairs(GetAllyHeroes()) do
@@ -550,8 +550,8 @@ function FindBestLocationToQ(target)
 		local index = 0
 		
 		for i=2, #points, 1 do
-			if GetDistance(points[i], MyPoint) >= Dist then
-				Dist = GetDistance(points[i], MyPoint)
+			if GetDistanceSqr(points[i], MyPoint) >= Dist*Dist then
+				Dist = GetDistanceSqr(points[i], MyPoint)
 				index = i
 			end
 		end
@@ -618,7 +618,7 @@ function OnTickChecks()
 	
 	if Menu.Misc.AutoEInitiate.Active and EREADY then
 		for i, unit in ipairs(GetAllyHeroes()) do
-			if GetDistance(unit) < Erange then
+			if GetDistanceSqr(unit) < Erange*Erange then
 				for champion, spell in pairs(InitiatorsList) do
 					if LastChampionSpell[unit.networkID] and LastChampionSpell[unit.networkID].name ~=nil and Menu.Misc.AutoEInitiate[champion.. LastChampionSpell[unit.networkID].name] and (os.clock() - LastChampionSpell[unit.networkID].time < 1.5) then
 						CastE(unit)
@@ -631,9 +631,9 @@ function OnTickChecks()
 	if Menu.Misc.Interrupt then
 		for i, unit in ipairs(GetEnemyHeroes()) do
 			for champion, spell in pairs(InterruptList) do
-				if GetDistance(unit) <= Qrange and LastChampionSpell[unit.networkID] and spell == LastChampionSpell[unit.networkID].name and (os.clock() - LastChampionSpell[unit.networkID].time < 1) then
+				if GetDistanceSqr(unit) <= Qrange*Qrange and LastChampionSpell[unit.networkID] and spell == LastChampionSpell[unit.networkID].name and (os.clock() - LastChampionSpell[unit.networkID].time < 1) then
 					CastSpell(_Q, unit.x, unit.z)
-					if GetDistance(BallPos, unit) < Rradius then
+					if GetDistanceSqr(BallPos, unit) < Rradius*Rradius then
 						CastSpellEx(_R)
 					end
 				end
@@ -648,8 +648,8 @@ function OnWndMsg(Msg, Key)
 		local starget = nil
 		for i, enemy in ipairs(GetEnemyHeroes()) do
 			if ValidTarget(enemy) then
-				if GetDistance(enemy, mousePos) <= minD or starget == nil then
-					minD = GetDistance(enemy, mousePos)
+				if GetDistanceSqr(enemy, mousePos) <= minD*minD or starget == nil then
+					minD = GetDistanceSqr(enemy, mousePos)
 					starget = enemy
 				end
 			end
@@ -676,10 +676,10 @@ function Harass(target)
 end
 
 function GetDistanceToClosestAlly(p)
-	local d = GetDistance(p, myHero)
+	local d = GetDistanceSqr(p, myHero)
 	for i, ally in ipairs(GetAllyHeroes()) do
 		if ValidTarget(ally, math.huge, false) then
-			local dist = GetDistance(p, ally)
+			local dist = GetDistanceSqr(p, ally)
 			if dist < d then
 				d = dist
 			end
@@ -720,7 +720,7 @@ function Combo(target)
 		
 		if Menu.Combo.UseE then
 			for i, ally in ipairs(GetAllyHeroes()) do
-				if ValidTarget(ally, math.huge, false) and GetDistance(ally) < Erange and CountEnemyHeroInRange(400, ally) >= 1 and (target == nil or GetDistance(ally, target) < 400) then
+				if ValidTarget(ally, math.huge, false) and GetDistanceSqr(ally) < Erange*Erange and CountEnemyHeroInRange(400, ally) >= 1 and (target == nil or GetDistanceSqr(ally, target) < 400*400) then
 					CastE(ally)
 				end
 			end
@@ -777,7 +777,7 @@ function Combo(target)
 			
 			
 			for i, ally in ipairs(GetAllyHeroes()) do
-				if ValidTarget(ally, Erange, false) and CountEnemyHeroInRange(300, ally) >= 3 and (target == nil or GetDistance(ally, target) < 300) then
+				if ValidTarget(ally, Erange, false) and CountEnemyHeroInRange(300, ally) >= 3 and (target == nil or GetDistanceSqr(ally, target) < 300*300) then
 					CastSpell(_E, ally)
 				end
 			end
@@ -961,7 +961,7 @@ DelayAction(function()
 			if tonumber(version) < ServerVersion and AUTO_UPDATE then
 				AutoupdaterMsg('New version available: ' .. ServerVersion)
 				AutoupdaterMsg('Updating, please don\'t press F9')
-				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg('Successfully updated. ('..version..' => '..ServerVersion..'), press F9 twice to load the updated version.') end) end, 3)
+				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg('Successfully updated. ('..version..' => '..ServerVersion..'), press F9 twice to load the updated version.') end) end, 1)
 			end
 		end
 		
